@@ -1,35 +1,60 @@
-var map;
-var IE10 = {
-	centerMarker : undefined,
-	initialize : function() {
+if (false || typeof window.console === "undefined") {
+	window.console = {
+		log : function() {
+		}
+	}
+}
+
+var ie10 = {
+	version : "0.1.0",
+
+	main : function() {
+		var p1 = new ie10.IE10Map();
+		p1.init();
+		console.log(p1.getMap());
+	}
+}
+
+ie10.IE10Map = function() {
+	this.map = {};
+	this.centerMarker = {};
+};
+
+ie10.IE10Map.prototype = {
+
+	getMap : function() {
+		return this.map;
+	},
+
+	init : function() {
 		var latlng = new google.maps.LatLng(35.709984, 139.810703);
 		var opts = {
 			zoom : 15,
 			center : latlng,
 			mapTypeId : google.maps.MapTypeId.ROADmap
 		};
-		IE10.browserOptimize();
+		this.browserOptimize();
 
-		map = new google.maps.Map(document.getElementById("map_canvas"), opts);
-		IE10.markSkyTree(map);
+		this.map = new google.maps.Map(document.getElementById("map_canvas"),
+				opts);
+		this.markSkyTree(this.map);
 
-		var latlng = map.getCenter();
-		IE10.centerMarker = new google.maps.Marker({
+		var latlng = this.map.getCenter();
+		var centerMarker = new google.maps.Marker({
 			position : new google.maps.LatLng(latlng),
 			draggable : false,
-			map : map,
+			map : this.map,
 			title : "CENTER HERE!"
 		});
-
-		google.maps.event.addListener(map, 'dragend', IE10.dispLatLng);
-
+		var dragendAction = this.dispLatLng(this.map, centerMarker);
+		google.maps.event.addListener(this.map, "dragend", dragendAction);
 	},
 
 	browserOptimize : function() {
 		var useragent = navigator.userAgent;
 		var mapdiv = document.getElementById("map_canvas");
-		var isMobileDevice = useragent.indexOf('iPhone') != -1
-				|| useragent.indexOf('Android') != -1;
+		var isMobileDevice = useragent.indexOf("iPhone") !== -1
+				|| useragent.indexOf('Android') !== -1;
 		if (true || isMobileDevice) {
 			mapdiv.style.width = '100%';
 			mapdiv.style.height = '100%';
@@ -59,22 +84,26 @@ var IE10 = {
 		}
 	},
 
-	dispLatLng : function() {
-		var latlng = map.getCenter();
-		var str = "[CENTER]=[" + latlng.lat() + "," + latlng.lng() + "]<br />";
+	dispLatLng : function(_map, centerMarker) {
+		var actionFunc = function() {
+			var latlng = _map.getCenter();
+			var str = "[CENTER]=[" + latlng.lat() + "," + latlng.lng()
+					+ "]<br />";
 
-		var latlngBounds = map.getBounds();
-		var swLatlng = latlngBounds.getSouthWest();
-		str = str + "[SouthWest]=[" + swLatlng.lat() + "," + swLatlng.lng()
-				+ "]<br />";
+			var latlngBounds = _map.getBounds();
+			var swLatlng = latlngBounds.getSouthWest();
+			str = str + "[SouthWest]=[" + swLatlng.lat() + "," + swLatlng.lng()
+					+ "]<br />";
 
-		var neLatlng = latlngBounds.getNorthEast();
-		str = str + "[NorthEast]=[" + neLatlng.lat() + "," + neLatlng.lng()
-				+ "]";
+			var neLatlng = latlngBounds.getNorthEast();
+			str = str + "[NorthEast]=[" + neLatlng.lat() + "," + neLatlng.lng()
+					+ "]";
 
-		console.log(str);
-		IE10.centerMarker.position = map.getCenter();
-		IE10.centerMarker.setMap(map);
+			console.log(str);
+			centerMarker.position = _map.getCenter();
+			centerMarker.setMap(_map);
+		}
+		return actionFunc;
 	},
 
 	setStyle : function() {
@@ -99,8 +128,8 @@ var IE10 = {
 			} ]
 		} ];
 
-		map.setOptions({
+		this.map.setOptions({
 			styles : styleArray
 		});
 	}
-}
+};
